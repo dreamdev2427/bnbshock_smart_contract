@@ -23,15 +23,10 @@ contract PairVetting is Ownable
 	event Maintenance(address owner, uint tokenBalance, uint nativeBalance);
 	event ChangedGameManager(address owner, address newManager);
 	
-	function changeGameManager(address _newAddr) external onlyOwner
-	{
-		gameManager = _newAddr;
-		emit ChangedGameManager(owner(), gameManager);
-	}
-
-	function updateGameManagerAddress(address newAddr) external {
+	function changeGameManager(address newAddr) external {
 	    require(msg.sender == gameManager);
 	    gameManager = newAddr;
+		emit ChangedGameManager(owner(), gameManager);
 	}
 
 	function enterVetting(string memory pairId, uint amount, uint pairPrice, uint vettingPeriod, bool upOrDown) external payable    
