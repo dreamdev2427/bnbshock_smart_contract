@@ -10,7 +10,7 @@ contract PairVetting is Ownable
 	using SafeMath for uint256;
 
 	address public gameManager = 0x4B129178704A94b112D7dF860C91986Fe11Ad23F;
-	uint public claimDuration = 24 * 3600 * 7;
+	uint public claimDuration = 24 * 3600;
 
 	struct winner
 	{
