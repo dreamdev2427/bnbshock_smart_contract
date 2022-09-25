@@ -11,6 +11,7 @@ contract PairVetting is Ownable
 
 	address public gameManager = 0x4B129178704A94b112D7dF860C91986Fe11Ad23F;
 	uint public claimDuration = 24 * 3600;
+	uint public referrlRate = 2;
 
 	struct winner
 	{
@@ -28,17 +29,25 @@ contract PairVetting is Ownable
 	event ChangedGameManager(address owner, address newManager);
 	event ChangedClaimDuration(address owner, uint newDuration);
 	event ClaimedAward(address wallet, uint awardAmount);
+	event ChangedReferralRate(address owner, uint newRate);
 	
 	function changeClaimDuration(uint newDuration) external {
-		require(msg.sender == gameManager || msg.sender == owner());
+		require(msg.sender == gameManager || msg.sender == owner(), "104");
 		claimDuration = newDuration;
 		emit ChangedClaimDuration(owner(), claimDuration);
 	}
 
 	function changeGameManager(address newAddr) external {
-		require(msg.sender == gameManager || msg.sender == owner());
+		require(msg.sender == gameManager || msg.sender == owner(), "104");
 		gameManager = newAddr;
 		emit ChangedGameManager(owner(), gameManager);
+	}
+
+	function changeReferralRate(uint newRate) external {
+		require(msg.sender == gameManager || msg.sender == owner(), "104");
+		require(newRate>=0 && newRate<=100, "105");
+		referrlRate = newRate;
+		emit ChangedReferralRate(owner(), gameManager);
 	}
 
 	function getClaimableInformation(address user) public view returns(uint, uint, uint) {
@@ -61,7 +70,7 @@ contract PairVetting is Ownable
 	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref) external payable    
 	{		
 		uint amount = msg.value;
-		uint awardAmount = amount.mul(2).div(100);
+		uint awardAmount = amount.mul(referrlRate).div(100);
 		refAwardAmount[ref] += awardAmount;
 		countOfRerrals[ref] += 1;		
 		emit StartOfVetting(msg.sender, pairId, amount - awardAmount, pairPrice, vettingPeriod, upOrDown);
