@@ -21,7 +21,7 @@ contract PairVetting is Ownable
 	}
 	mapping( address => uint256 ) refAwardAmount;
 	mapping( address => uint256 ) countOfRerrals;
-  mapping( address => uint256 ) claimedTime;
+  	mapping( address => uint256 ) claimedTime;
 
 	event StartOfVetting(address wallet, string pairId ,uint pairPrice, uint amount, uint vettingPeriod, bool upOrDown);
 	event EndOfVetting(winner[] winners);
@@ -37,6 +37,15 @@ contract PairVetting is Ownable
 		emit ChangedClaimDuration(owner(), claimDuration);
 	}
 
+	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref) external payable    
+	{		
+		uint amount = msg.value;
+		uint awardAmount = amount.mul(referrlRate).div(100);
+		refAwardAmount[ref] += awardAmount;
+		countOfRerrals[ref] += 1;		
+		emit StartOfVetting(msg.sender, pairId, pairPrice, amount - awardAmount, vettingPeriod, upOrDown);
+	}
+
 	function changeGameManager(address newAddr) external {
 		require(msg.sender == gameManager || msg.sender == owner(), "104");
 		gameManager = newAddr;
@@ -47,7 +56,7 @@ contract PairVetting is Ownable
 		require(msg.sender == gameManager || msg.sender == owner(), "104");
 		require(newRate>=0 && newRate<=100, "105");
 		referrlRate = newRate;
-		emit ChangedReferralRate(owner(), gameManager);
+		emit ChangedReferralRate(owner(), referrlRate);
 	}
 
 	function getClaimableInformation(address user) public view returns(uint, uint, uint) {
@@ -56,7 +65,7 @@ contract PairVetting is Ownable
 
 	function claimReferralAwards(address user) external {
 		require( refAwardAmount[user] > 0, "103");
-    require( claimedTime[user] + claimDuration > block.timestamp, "102" );
+    	require( claimedTime[user] + claimDuration > block.timestamp, "102" );
 		require( address(this).balance > refAwardAmount[user], "101");
 
  		payable(user).transfer(refAwardAmount[user]);
@@ -65,15 +74,6 @@ contract PairVetting is Ownable
 		refAwardAmount[user] = 0;
 		countOfRerrals[user] = 0;
 		claimedTime[user] = block.timestamp;
-	}
-
-	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref) external payable    
-	{		
-		uint amount = msg.value;
-		uint awardAmount = amount.mul(referrlRate).div(100);
-		refAwardAmount[ref] += awardAmount;
-		countOfRerrals[ref] += 1;		
-		emit StartOfVetting(msg.sender, pairId, amount - awardAmount, pairPrice, vettingPeriod, upOrDown);
 	}
 
 	function endVetting(winner[] memory winners) external
