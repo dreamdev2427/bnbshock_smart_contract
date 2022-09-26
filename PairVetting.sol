@@ -31,10 +31,27 @@ contract PairVetting is Ownable
 	event ClaimedAward(address wallet, uint awardAmount);
 	event ChangedReferralRate(address owner, uint newRate);
 	
+    event Received(address, uint);
+    event Fallback(address, uint);
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    fallback() external payable { 
+        emit Fallback(msg.sender, msg.value);
+    }
+
 	function changeClaimDuration(uint newDuration) external {
 		require(msg.sender == gameManager || msg.sender == owner(), "104");
 		claimDuration = newDuration;
 		emit ChangedClaimDuration(owner(), claimDuration);
+	}
+
+	function enterVettingWithoutRef(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown) external payable    
+	{		
+		uint amount = msg.value;
+		emit StartOfVetting(msg.sender, pairId, pairPrice, amount, vettingPeriod, upOrDown);
 	}
 
 	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref) external payable    
