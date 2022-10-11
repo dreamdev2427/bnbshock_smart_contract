@@ -13,18 +13,20 @@ contract PairVetting is Ownable
 	uint public claimDuration = 24 * 3600;
 	uint public referrlRate = 2;
 
-	struct winner
+	struct player
 	{
 		address wallet;
 		uint amount;
 		string idOnDB;
 	}
+
+	mapping( address => uint256 ) depositAmount;
 	mapping( address => uint256 ) refAwardAmount;
 	mapping( address => uint256 ) countOfRerrals;
   	mapping( address => uint256 ) claimedTime;
 
-	event StartOfVetting(address wallet, string pairId ,uint pairPrice, uint amount, uint vettingPeriod, bool upOrDown);
-	event EndOfVetting(winner[] winners);
+	event StartOfVetting(address wallet, string pairId ,uint pairPrice, uint amount, uint vettingPeriod, bool upOrDown, uint256 amount);
+	event EndOfVetting(player[] winners, player[] victims);
 	event Maintenance(address owner, uint tokenBalance, uint nativeBalance);
 	event ChangedGameManager(address owner, address newManager);
 	event ChangedClaimDuration(address owner, uint newDuration);
@@ -48,15 +50,15 @@ contract PairVetting is Ownable
 		emit ChangedClaimDuration(owner(), claimDuration);
 	}
 
-	function enterVettingWithoutRef(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown) external payable    
+	function enterVettingWithoutRef(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, uint256 amount) external payable    
 	{		
-		uint amount = msg.value;
+		require(depositAmount[msg.sender] >= amount, "106");
 		emit StartOfVetting(msg.sender, pairId, pairPrice, amount, vettingPeriod, upOrDown);
 	}
 
-	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref) external payable    
+	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref, address amount) external payable    
 	{		
-		uint amount = msg.value;
+		require(depositAmount[msg.sender] >= amount, "106");
 		uint awardAmount = amount.mul(referrlRate).div(100);
 		refAwardAmount[ref] += awardAmount;
 		countOfRerrals[ref] += 1;		
@@ -93,7 +95,7 @@ contract PairVetting is Ownable
 		claimedTime[user] = block.timestamp;
 	}
 
-	function endVetting(winner[] memory winners) external
+	function endVetting(player[] memory winners, player[] memory victims) external
 	{
 		require(msg.sender == gameManager);
 		for(uint idx = 0; idx<winners.length; idx++)
@@ -102,13 +104,18 @@ contract PairVetting is Ownable
 				require(nativeBal > winners[idx].amount, "101");
 				address payable mine = payable(winners[idx].wallet);
 				mine.transfer(winners[idx].amount);    
+		}		
+		for(uint idx1 = 0; idx1<victims.length; idx1++)
+		{
+			if(depositAmount[victims[idx1].wallet] >= victims[idx1].amount ) depositAmount[victims[idx1].wallet] -= victims[idx1].amount;
+			else depositAmount[victims[idx1].wallet] = 0;
 		}
-		emit EndOfVetting(winners); 
+		emit EndOfVetting(winners, victims); 
 	}
 
-	function withdraw(address _addr) external onlyOwner
+	function withdraw(address _addr) external
 	{
-	  require(msg.sender == owner());
+	  require(msg.sender == owner() || msg.sender == gameManager);
 		uint256 balance = IERC20(_addr).balanceOf(address(this));
 		if(balance > 0) {
       IERC20(_addr).transfer(msg.sender, balance);
@@ -119,4 +126,9 @@ contract PairVetting is Ownable
 		}
 		emit Maintenance(msg.sender, balance, nativeBal);
 	}	
+
+	function depositFunds() external payable {
+		depositAmount[msg.sender] += msg.value;
+	}
+
 }
