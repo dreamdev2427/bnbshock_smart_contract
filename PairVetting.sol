@@ -33,6 +33,7 @@ contract PairVetting is Ownable
 	event ChangedGameManager(address owner, address newManager);
 	event ChangedClaimDuration(address owner, uint newDuration);
 	event ClaimedAward(address wallet, uint awardAmount);
+	event WithDrawedPlayerFunds(address wallet, uint withdrawnAmount);
 	event ChangedReferralRate(address owner, uint newRate);
 	event ChangeMinDepositLimit(address owner, uint newLimit);
 	event ChangeMaxDepositLimit(address owner, uint newLimit);
@@ -60,7 +61,7 @@ contract PairVetting is Ownable
 		emit StartOfVetting(msg.sender, pairId, pairPrice, amount, vettingPeriod, upOrDown);
 	}
 
-	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref, address amount) external payable    
+	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref, uint amount) external payable    
 	{		
 		require(depositAmount[msg.sender] >= amount, "106");
 		uint awardAmount = amount.mul(referrlRate).div(100);
@@ -98,12 +99,12 @@ contract PairVetting is Ownable
 		return (refAwardAmount[user], countOfRerrals[user], claimedTime[user], depositAmount[user]);
 	}
 
-	function withDrawPlayerFunds() public external {
+	function withDrawPlayerFunds()  external {
 		if(depositAmount[msg.sender] > 0)
 		{
 			require( address(this).balance > depositAmount[msg.sender], "101");
 			payable(msg.sender).transfer(depositAmount[msg.sender]);
-			emit WithDrawedPlayerFunds(user, depositAmount[msg.sender]);
+			emit WithDrawedPlayerFunds(msg.sender, depositAmount[msg.sender]);
 		}
 	}
 
