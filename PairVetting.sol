@@ -9,9 +9,11 @@ contract PairVetting is Ownable
 {    
 	using SafeMath for uint256;
 
-	address public gameManager = 0x4B129178704A94b112D7dF860C91986Fe11Ad23F;
+	address private gameManager = 0x4B129178704A94b112D7dF860C91986Fe11Ad23F;
 	uint public claimDuration = 24 * 3600;
 	uint public referrlRate = 2;
+    uint256 public MIN_DEPOSIT_LIMIT = 1 * 1e16; /* 0.01 BNB  */
+    uint256 public MAX_DEPOSIT_LIMIT = 10 * 1e18; /* 10 BNB  */
 
 	struct player
 	{
@@ -32,6 +34,8 @@ contract PairVetting is Ownable
 	event ChangedClaimDuration(address owner, uint newDuration);
 	event ClaimedAward(address wallet, uint awardAmount);
 	event ChangedReferralRate(address owner, uint newRate);
+	event ChangeMinDepositLimit(address owner, uint newLimit);
+	event ChangeMaxDepositLimit(address owner, uint newLimit);
 	
     event Received(address, uint);
     event Fallback(address, uint);
@@ -77,6 +81,18 @@ contract PairVetting is Ownable
 		referrlRate = newRate;
 		emit ChangedReferralRate(owner(), referrlRate);
 	}
+	
+	function changeMinDepositLimit(uint newAmount) external {
+		require(msg.sender == gameManager || msg.sender == owner(), "104");
+		MIN_DEPOSIT_LIMIT = newAmount;
+		emit ChangeMinDepositLimit(owner(), MIN_DEPOSIT_LIMIT);
+	}
+	
+	function changeMaxDepositLimit(uint newAmount) external {
+		require(msg.sender == gameManager || msg.sender == owner(), "104");
+		MAX_DEPOSIT_LIMIT = newAmount;
+		emit ChangeMaxDepositLimit(owner(), MAX_DEPOSIT_LIMIT);
+	}
 
 	function getClaimableInformation(address user) public view returns(uint, uint, uint) {
 		return (refAwardAmount[user], countOfRerrals[user], claimedTime[user]);
@@ -107,8 +123,7 @@ contract PairVetting is Ownable
 		}		
 		for(uint idx1 = 0; idx1<victims.length; idx1++)
 		{
-			if(depositAmount[victims[idx1].wallet] >= victims[idx1].amount ) depositAmount[victims[idx1].wallet] -= victims[idx1].amount;
-			else depositAmount[victims[idx1].wallet] = 0;
+			depositAmount[victims[idx1].wallet] = depositAmount[victims[idx1].wallet].sub(victims[idx1].amount);
 		}
 		emit EndOfVetting(winners, victims); 
 	}
@@ -127,8 +142,10 @@ contract PairVetting is Ownable
 		emit Maintenance(msg.sender, balance, nativeBal);
 	}	
 
-	function depositFunds() external payable {
-		depositAmount[msg.sender] += msg.value;
+	function depositFunds() external payable {		
+        require(msg.value >= MIN_DEPOSIT_LIMIT, "107");
+        require(depositAmount[msg.sender].add(msg.value) <= MAX_DEPOSIT_LIMIT, "108");
+		depositAmount[msg.sender] = depositAmount[msg.sender].add(msg.value);
 	}
 
 }
