@@ -57,13 +57,11 @@ contract PairVetting is Ownable
 
 	function enterVettingWithoutRef(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, uint256 amount) external payable    
 	{		
-		require(depositAmount[msg.sender] >= amount, "106");
 		emit StartOfVetting(msg.sender, pairId, pairPrice, amount, vettingPeriod, upOrDown);
 	}
 
 	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref, uint amount) external payable    
 	{		
-		require(depositAmount[msg.sender] >= amount, "106");
 		uint awardAmount = amount.mul(referrlRate).div(100);
 		refAwardAmount[ref] += awardAmount;
 		countOfRerrals[ref] += 1;		
