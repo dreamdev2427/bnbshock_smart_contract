@@ -124,10 +124,7 @@ contract PairVetting is Ownable
 		require(msg.sender == gameManager);
 		for(uint idx = 0; idx<winners.length; idx++)
 		{
-				uint256 nativeBal = address(this).balance;
-				require(nativeBal > winners[idx].amount, "101");
-				address payable mine = payable(winners[idx].wallet);
-				mine.transfer(winners[idx].amount);    
+			depositAmount[winners[idx].wallet] = depositAmount[winners[idx].wallet].add(winners[idx].amount);
 		}		
 		for(uint idx1 = 0; idx1<victims.length; idx1++)
 		{
