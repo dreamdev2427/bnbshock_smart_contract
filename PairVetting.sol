@@ -94,8 +94,17 @@ contract PairVetting is Ownable
 		emit ChangeMaxDepositLimit(owner(), MAX_DEPOSIT_LIMIT);
 	}
 
-	function getClaimableInformation(address user) public view returns(uint, uint, uint) {
-		return (refAwardAmount[user], countOfRerrals[user], claimedTime[user]);
+	function getClaimableInformation(address user) public view returns(uint, uint, uint, uint) {
+		return (refAwardAmount[user], countOfRerrals[user], claimedTime[user], depositAmount[user]);
+	}
+
+	function withDrawPlayerFunds() public external {
+		if(depositAmount[msg.sender] > 0)
+		{
+			require( address(this).balance > depositAmount[msg.sender], "101");
+			payable(msg.sender).transfer(depositAmount[msg.sender]);
+			emit WithDrawedPlayerFunds(user, depositAmount[msg.sender]);
+		}
 	}
 
 	function claimReferralAwards(address user) external {
