@@ -27,7 +27,7 @@ contract PairVetting is Ownable
 	mapping( address => uint256 ) countOfRerrals;
   	mapping( address => uint256 ) claimedTime;
 
-	event StartOfVetting(address wallet, string pairId ,uint pairPrice, uint amount, uint vettingPeriod, bool upOrDown, uint256 amount);
+	event StartOfVetting(address wallet, string pairId ,uint pairPrice, uint amount, uint vettingPeriod, bool upOrDown);
 	event EndOfVetting(player[] winners, player[] victims);
 	event Maintenance(address owner, uint tokenBalance, uint nativeBalance);
 	event ChangedGameManager(address owner, address newManager);
