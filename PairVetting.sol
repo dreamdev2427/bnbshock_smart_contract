@@ -9,7 +9,7 @@ contract PairVetting is Ownable
 {    
 	using SafeMath for uint256;
 
-	address private gameManager = 0x4B129178704A94b112D7dF860C91986Fe11Ad23F;
+	address private gameManager = 0x614D7984d20495e9276080008C36AEa9C0752910;
 	uint public claimDuration = 24 * 3600;
 	uint public referrlRate = 2;
     uint256 public MIN_DEPOSIT_LIMIT = 1 * 1e16; /* 0.01 BNB  */
@@ -55,19 +55,21 @@ contract PairVetting is Ownable
 		emit ChangedClaimDuration(owner(), claimDuration);
 	}
 
-	function enterVettingWithoutRef(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, uint256 amount) external payable    
+	function enterVettingWithoutRef(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, uint256 amount, address wallet) external payable    
 	{		
-		require(msg.sender == gameManager);
-		emit StartOfVetting(msg.sender, pairId, pairPrice, amount, vettingPeriod, upOrDown);
+		require(msg.sender == gameManager);		
+		require(depositAmount[wallet].sub(amount) >= 0);
+		emit StartOfVetting(wallet, pairId, pairPrice, amount, vettingPeriod, upOrDown);
 	}
 
-	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref, uint amount) external payable    
+	function enterVetting(string memory pairId, uint pairPrice, uint vettingPeriod, bool upOrDown, address ref, uint amount, address wallet) external payable    
 	{		
 		require(msg.sender == gameManager);
+		require(depositAmount[wallet].sub(amount) >= 0);
 		uint awardAmount = amount.mul(referrlRate).div(100);
-		refAwardAmount[ref] += awardAmount;
-		countOfRerrals[ref] += 1;		
-		emit StartOfVetting(msg.sender, pairId, pairPrice, amount - awardAmount, vettingPeriod, upOrDown);
+		refAwardAmount[ref] = refAwardAmount[ref].add(awardAmount);
+		countOfRerrals[ref] = countOfRerrals[ref].add(1);		
+		emit StartOfVetting(wallet, pairId, pairPrice, amount - awardAmount, vettingPeriod, upOrDown);
 	}
 
 	function changeGameManager(address newAddr) external {
