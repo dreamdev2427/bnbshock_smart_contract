@@ -101,6 +101,19 @@ contract PairVetting is Ownable
 		return (refAwardAmount[user], countOfRerrals[user], claimedTime[user], depositAmount[user]);
 	}
 
+	function canWithdrawGameFunds() public view returns (uint ) {
+		if(depositAmount[msg.sender] == 0 ) return 1;
+		else if(address(this).balance < depositAmount[msg.sender])	return 2;
+		else return 0;		
+	}
+
+	function canClaimReferralAwards() public view returns (uint) {
+		if(refAwardAmount[msg.sender] == 0) return 1;
+		else if(address(this).balance < refAwardAmount[msg.sender]) return 2;
+		else if(claimedTime[msg.sender] + claimDuration <= block.timestamp) return 3;
+		else return 0;
+	}
+
 	function withDrawPlayerFunds()  external {
 		if(depositAmount[msg.sender] > 0)
 		{
