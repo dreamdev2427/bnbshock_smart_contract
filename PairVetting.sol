@@ -110,7 +110,7 @@ contract PairVetting is Ownable
 	function canClaimReferralAwards() public view returns (uint) {
 		if(refAwardAmount[msg.sender] == 0) return 1;
 		else if(address(this).balance < refAwardAmount[msg.sender]) return 2;
-		else if(claimedTime[msg.sender] + claimDuration <= block.timestamp && claimedTime[user] != 0) return 3;
+		else if(claimedTime[msg.sender] + claimDuration <= block.timestamp && claimedTime[msg.sender] != 0) return 3;
 		else return 0;
 	}
 
